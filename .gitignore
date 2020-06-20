@@ -1,3 +1,9 @@
+**/node_modules
+**/.DS_Store
+
+**/jspm_packages
+**/.serverless
+
 # Logs
 logs
 *.log

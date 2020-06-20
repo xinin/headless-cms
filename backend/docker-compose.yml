@@ -1,0 +1,68 @@
+version: '3.7'
+services:
+  s3:
+    container_name: s3
+    image: scireum/s3-ninja:6.4
+    ports:
+      - "9444:9000"
+    volumes:
+      - /tmp/s3-data:/home/sirius/data
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+    networks:
+      - headless-cms-network
+
+  dynamo:
+    container_name: dynamo-local
+    image: amazon/dynamodb-local
+    command: -jar DynamoDBLocal.jar -sharedDb -dbPath /tmp
+    ports:
+      - "8000:8000"
+    volumes:
+      - type: bind
+        source: /tmp
+        target: /tmp/dynamo-data/
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+    networks:
+      - headless-cms-network
+
+  dynamoUI:
+    container_name: dynamo-ui
+    image: aaronshaf/dynamodb-admin
+    ports:
+      - "8001:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamo:8000
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+    networks:
+      - headless-cms-network
+
+  backend:
+    container_name: backend
+    build: "./"
+    ports:
+      - "3000:3000"
+    volumes:
+      - './:/app'
+    environment:
+      - AWS_ACCESS_KEY_ID='TODO'
+      - AWS_SECRET_ACCESS_KEY='TODO'
+      - AWS_SESSION_TOKEN='TODO'
+      - DYNAMO_HOST=http://dynamo:8000
+      - ENVIRONMENT=LOCAL
+    networks:
+      - headless-cms-network
+  
+networks:
+  headless-cms-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.3.0/24
